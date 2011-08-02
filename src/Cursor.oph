@@ -1,0 +1,119 @@
+; cursor manipulation code
+
+.alias CURSOR_X_MAX 30
+.alias CURSOR_X_MIN 5
+.alias CURSOR_Y_MAX 27
+.alias CURSOR_Y_MIN 8
+
+cursor_char:        .byte "Q"   ; this is arbitrary
+
+draw_cursor:
+    lda cursor_x
+    cmp cursor_old_x
+    bne +
+    lda cursor_y
+    cmp cursor_old_y
+    beq ++
+*   jsr pop_cursor
+    jsr push_cursor
+*   rts
+
+get_cursor_tile:
+    lda cursor_y    ; calculate cursor tile, a is the low byte, x is the high byte and y is the index
+    ldx #00
+    jsr multiply32
+    clc
+    adc cursor_x    ; add x coordinates
+    sta <cursor_tile    ; store the number of the tile the cursor is to be drawn on
+    stx >cursor_tile
+    rts
+
+init_cursor:
+    lda #CURSOR_X_MIN
+    sta cursor_x
+    lda #CURSOR_Y_MIN
+    sta cursor_y
+    rts
+
+move_cursor_up:
+    ldx cursor_y
+    dex
+    cpx #CURSOR_Y_MIN
+    bcs +
+    jsr next_key_page
+    ldx #CURSOR_Y_MAX
+*   stx cursor_y
+    rts
+
+move_cursor_down:
+    ldx cursor_y
+    cpx #CURSOR_Y_MAX
+    inx
+    bcc +
+    jsr prev_key_page
+    ldx #CURSOR_Y_MIN
+*   stx cursor_y
+    rts
+
+move_cursor_left:
+    ldx cursor_x
+    dex
+    cpx #CURSOR_X_MIN
+    bcs +
+    jsr prev_seq_page
+    ldx #CURSOR_X_MAX
+*   stx cursor_x
+    jsr draw_cursor
+    rts
+
+move_cursor_right:
+    ldx cursor_x
+    cpx #CURSOR_X_MAX
+    inx
+    bcc +
+    jsr next_seq_page
+    ldx #CURSOR_X_MIN
+*   stx cursor_x
+    rts
+
+pop_cursor:
+    clc
+    lda #$00
+    adc <cursor_tile
+    tay
+    lda #$24
+    adc >cursor_tile
+    tax
+
+    lda cursor_old_char
+    stx $2006
+    sty $2006
+    sta $2007
+    rts
+
+push_cursor:    
+    lda cursor_x
+    sta cursor_old_x
+    lda cursor_y
+    sta cursor_old_y
+    jsr get_cursor_tile
+    
+    clc
+    lda #$00
+    adc <cursor_tile
+    tay
+    lda #$24
+    adc >cursor_tile
+    tax
+
+    stx $2006
+    sty $2006
+    lda $2007
+    lda $2007
+    sta cursor_old_char
+    
+    lda cursor_char
+    stx $2006
+    sty $2006
+    sta $2007
+    rts

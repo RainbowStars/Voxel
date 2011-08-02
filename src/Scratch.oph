@@ -1,0 +1,34 @@
+draw_seq:
+    a = low byte
+    x = high byte
+    y = counter
+    calculate offset to first line of keys
+    get the 3 digits to write, store them
+    write them to their respective locations
+    add the constant offset to the next line
+    repeat KEY_NUM times
+    return
+
+; starting at CURSOR_Y_MIN, draw KEY_NUM keys starting at key_page*KEY_NUM and going down
+
+x = n modulo ten, display x, move left, divide n by ten, repeat
+
+get 3 digits:
+    ? ? ?
+
+   ; (KEY_ROWS * key_page) - (KEY_ROWS - y)) = |key|
+    
+    lda #KEY_ROWS
+    sta x_8
+    lda key_page
+    sta y_8
+    jsr multiply8_16
+    tax
+    lda #KEY_ROWS
+    sec
+    sbc key_x
+    sta x_8
+    txa
+    sec
+    sbc x_8
+    sta x_8

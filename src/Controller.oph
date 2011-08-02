@@ -1,0 +1,52 @@
+; controller code
+
+input:
+    lda #$01        ; I'm not really sure what this does
+    sta $4016
+    lda #$00
+    sta $4016
+    lda $4016       ; A
+    lda $4016       ; B
+    lda $4016       ; Select
+    lda $4016       ; Start
+*   lda $4016       ; Up
+    and #1
+    beq +
+    ldx up_state
+    bne ++
+    sta up_state
+    jsr move_cursor_up
+    jmp ++
+*   sta up_state
+
+*   lda $4016       ; Down
+    and #1
+    beq +
+    ldx down_state
+    bne ++
+    sta down_state
+    jsr move_cursor_down
+    jmp ++
+*   sta down_state
+
+*   lda $4016       ; Left
+    and #1
+    beq +
+    ldx left_state
+    bne ++
+    sta left_state
+    jsr move_cursor_left
+    jmp ++
+*   sta left_state
+
+*   lda $4016       ; Right
+    and #1
+    beq +
+    ldx right_state
+    bne ++
+    sta right_state
+    jsr move_cursor_right
+    jmp ++
+*   sta right_state
+
+*   rts

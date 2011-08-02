@@ -1,0 +1,9 @@
+; iNES header
+.byte "NES", $1a
+.byte $02		; number of PRG-ROM blocks
+.byte $01 		; number of CHR-ROM blocks
+.byte $00, $00	; ROM control bytes
+.byte $00,$00,$00,$00,$00,$00,$00,$00
+
+.include "PRG-ROM.oph"
+.include "CHR-ROM.oph"
