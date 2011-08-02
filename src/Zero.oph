@@ -1,0 +1,60 @@
+; things to store in the zero page
+
+.text zero_page            ; zero page
+.org $0000
+.space buffa    1   ; if this isn't here the whole thing stops working for some reason
+.space frame    2   ; pointer to new frame to draw
+
+; generic math variables/operands
+
+.space x_8          1
+.space y_8          1
+.space z_8          1
+.space x_16         2
+.space y_16         2
+.space z_16         1
+.space x_24         3
+.space y_24         3
+.space z_24         1
+.space x_32         4
+.space y_32         4
+.space z_32         4
+
+.space digits24     3
+
+; cursor states
+
+.space cursor_x     1
+.space cursor_y     1
+;cursor_char:    .byte "Q"
+.space cursor_tile  2
+.space cursor_old_x 1
+.space cursor_old_y 1
+.space cursor_old_char  1
+
+; controller states
+
+.space a_state      1
+.space b_state      1
+.space select_state 1
+.space start_state  1
+.space up_state     1
+.space down_state   1
+.space left_state   1
+.space right_state  1
+
+; sequencer states
+.space fuck 1
+.space key_page     1
+.space key_num_high 1
+.space key_num_mid  1
+.space key_num_low  1
+.space key          1
+.space key_tile     2
+.space key_y        1
+.space seq_page     1
+
+.space keymem_high  1
+.space keymem_low   1
+.space KEY_BUFFER   60  ; 3 * KEY_ROWS
+.space redraw_keys  1

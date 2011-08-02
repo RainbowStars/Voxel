@@ -1,0 +1,57 @@
+; miscellaneous macros and functions
+
+.macro load_frame   ; make frame pointer in zero page point to a new frame to draw
+    lda #<_1
+    sta <frame
+    lda #>_1
+    sta >frame
+.macend
+
+.macro wait_vblanks
+    ldx #$00        ; wait _1 vblanks
+*   jsr wait_vblank
+    inx
+    cpx #_1
+    bne -
+.macend
+
+.macro push_registers   ; push/pop registers so they don't get clobbered
+    pha
+    txa
+    pha
+    tya
+    pha
+.macend
+
+.macro pop_registers
+    pla
+    tay
+    pla
+    tax
+    pla
+.macend
+
+.macro compare16
+    lda <_1
+    cmp <_2
+    bne +
+    lda >_1
+    cmp >_2
+    bne +
+*   nop
+.macend
+
+.macro get_vram_offset  ; calculate vram offset, x and a are high and low bytes respectively
+    lda #_2
+    ldx #$00
+
+    jsr multiply32
+
+    clc
+    adc #_1
+    tay
+    txa
+    adc #$24
+    tax
+    tya
+.macend

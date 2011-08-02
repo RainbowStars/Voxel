@@ -1,0 +1,158 @@
+; program code, mostly contains interrupt vectors and initialization code
+
+.include "Zero.oph"
+
+.text
+.org $8000
+
+.include "Controller.oph"
+.include "Math.oph"
+.include "Misc.oph"
+
+.include "Cursor.oph"
+.include "Sequencer.oph"
+
+; interrupt handlers
+
+reset:
+    sei             ; disable interrupts
+    cld
+
+    jsr disable_graphics
+    jsr init_graphics
+    
+    `wait_vblanks 1
+    
+    jsr disable_graphics
+    `load_frame seq
+    jsr load_nametables
+    jsr init_ppu
+    
+    jsr init_cursor
+    jsr init_seq
+    
+    cli
+
+    jmp main        ; main loop
+
+irq:                ; irq/brk vector
+    rti
+
+nmi:                ; nmi vector
+    sei             ; prevent interrupts
+    php             ; push processor status on stack in case a branch is interrupted
+    `push_registers
+    jsr input
+    jsr draw_cursor
+    ;jsr nmi_draw_keys
+    jsr reset_vram  ; reset vram on nmi or else weird things happen
+    `pop_registers
+    plp
+    cli
+    rti
+
+main:               ; main loop
+    jmp main
+
+reset_vram:
+    lda #$00
+    sta $2006
+    sta $2006
+    rts
+
+wait_vblank:
+*   lda $2002
+    bpl -
+    rts
+
+; initialization routines   
+
+disable_graphics:
+    lda #$00
+    sta $2000
+    sta $2001
+    rts
+
+init_graphics:
+    jsr load_palette
+    `load_frame intro
+    jsr load_nametables
+    jsr init_ppu
+    rts
+
+init_input:
+    lda #$00
+    ;sta controller
+    rts
+
+init_ppu:
+    lda #$88
+    sta $2000
+    lda #$1E
+    sta $2001
+    rts
+
+init_sound:
+    rts
+
+; loading routines
+
+load_nametables:    ; load frame into vram
+    ldy #$00
+    ldx #$04
+    lda <frame
+    sta $10
+    lda >frame
+    sta $11
+    lda #$24
+    sta $2006
+    lda #$00
+    sta $2006
+*   lda ($10),y
+    sta $2007
+    iny
+    bne -
+    inc $11
+    dex
+    bne -
+    jsr clear_nametables
+    rts
+
+clear_nametables:
+    ldy #$00
+    ldx #$04
+    lda #$00
+*   sta $2007
+    iny
+    bne -
+    dex
+    bne -
+    rts
+
+load_palette:       ; loads the palette into vram
+    lda #$3F
+    sta $2006
+    lda #$00
+    sta $2006
+    
+    ldx #$00        ; load palette into memory, one byte at a time
+*   lda palette, x
+    sta $2007
+    inx
+    cpx #32
+    bne -
+    rts
+palette:
+    .incbin "img/background.pal"
+    .incbin "img/sprite.pal"
+
+intro:
+    .include "img/Test.oph"
+
+seq:
+    .include "img/Seq.oph"
+
+.advance $FFFA      ; pad the rest of our file with zeros
+.word nmi           ; interrupt handlers
+.word reset
+.word irq

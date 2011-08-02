@@ -1,0 +1,129 @@
+; basic math operations
+; these are mostly pretty inefficient :(
+
+; x_(8|16|24|32) is normally the first operand and y_whatever is the second
+; the result is normally stored in z_ (but labels might store the result in a zero page variable of a different size than its operands - multiply8_16 multiples 2 8-bit numbers and returns a 16 bit number, so it uses x_8 and y_8 but stores its result in z_16)
+
+; for many math operations a macro is much more cpu efficient for a small tradeoff in memory useage. Calling/returning from a function with jsr/rts costs 6 cycles each, and a write to RAM (the call stack), and for many math operations the operands also must be written to memory before the operation can be carried out.
+
+.macro add16_16
+    clc
+    lda <_1
+    adc <_2
+    sta <_3
+    lda >_1
+    adc >_2
+    sta >_3
+.macend
+
+add16_16:           ; add
+    clc
+    lda <x_16
+    adc <y_16
+    sta <z_16
+    lda >x_16
+    adc >y_16
+    sta >z_16
+    rts
+
+digits8_24:
+    lda x_8
+    jsr divide8_8_
+    adc #$30
+    sta z_24
+    sty x_8
+    jsr divide8_8_
+    adc #$30
+    sta z_24+1
+    sty x_8
+    jsr divide8_8_
+    adc #$30
+    sta z_24+2
+    rts
+
+; $a1 = input number / ouput remainder
+; $a2 = output div
+;naive_divmod10:
+;	$a2 <- 0
+;
+;repeat:
+;	if $a1 < 10 goto done
+;	$a1 <- $a1 - 10
+;	$a2 <- $a2 + 1
+;	goto repeat
+;
+;done:
+;	return
+
+divide8_8_:
+    lda #$00
+    ldy #$00
+    sta y_8
+    lda x_8
+*   cmp #10
+    bmi +
+    sec
+    sbc #10
+    iny
+    jmp -
+*   sta x_8
+    sty y_8
+    rts
+
+divide8_8:
+    lda #$00
+    ldx #$07
+    clc
+*   rol x_8
+    rol
+    cmp y_8
+    bcc +
+    sbc x_8
+*   dex
+    bpl --
+    rol x_8
+    rts
+
+multiply32:
+    clc
+    ldy #00
+*   cpy #5          ; 2^5=32
+    beq +
+    iny
+    pha
+    txa
+    clc
+    asl
+    tax
+    pla
+    clc
+    asl
+    bcc -
+    inx
+    jmp -
+*   rts
+
+multiply8_16:
+    lda #$00
+    ldx #$00
+    ldy #$00
+*   adc x_8
+    bcc +
+    inx
+*   iny
+    cpy y_8
+    bne --
+    sta <z_16
+    stx >z_16
+    rts
+
+multiply8_8:
+    lda #$00
+    ldx #$00
+    clc
+*   cpx y_8
+    beq +
+    adc x_8
+    inx
+    jmp -
+*   rts

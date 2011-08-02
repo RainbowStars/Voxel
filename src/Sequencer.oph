@@ -1,0 +1,95 @@
+; code related to the main sequencer window
+
+.alias KEY_MIN  1
+.alias KEY_MAX  127
+.alias KEY_ROWS 20
+.alias KEY_X_MIN 2
+.alias KEY_Y_MIN [CURSOR_Y_MIN - 1]
+.alias KEY_PAGE_DEFAULT 2
+.alias SEQ_PAGE_DEFAULT 0
+.alias SEQ_COLS 20
+
+draw_keys:
+    `get_vram_offset KEY_X_MIN, KEY_Y_MIN
+    pha
+    jsr disable_graphics
+    pla
+    
+    ldy #KEY_ROWS
+
+*   sty key_y
+
+    clc
+    adc #32
+    bcc +
+    inx
+
+*   stx $2006
+    sta $2006
+
+    `push_registers ; add (key_page - 1) * KEY_ROWS
+    jsr get_key_num
+    sta x_8
+    jsr digits8_24
+    lda z_24+2
+    sta $2007
+    lda z_24+1
+    sta $2007
+    lda z_24
+    sta $2007
+    `pop_registers
+    dey
+    cpy #00
+    bne --
+
+*   jsr reset_vram
+    jsr init_ppu
+    rts
+
+draw_seq:
+    rts
+
+get_key_num:
+    ldx key_page
+    ;dex
+    stx x_8
+    lda #KEY_ROWS
+    sta y_8
+    jsr multiply8_8
+    adc key_y
+    tax
+    dex
+    txa
+    rts
+
+init_seq:
+    lda #KEY_PAGE_DEFAULT
+    sta key_page
+    lda #SEQ_PAGE_DEFAULT
+    sta seq_page
+    jsr draw_keys
+    rts
+
+next_key_page:
+    ldx key_page
+    inx
+    cpx #07
+    bpl +
+    stx key_page
+    jsr draw_keys
+*   rts
+
+next_seq_page:
+    rts
+
+prev_key_page:
+    ldx key_page
+    dex
+    cpx #00
+    bmi +
+    stx key_page
+    jsr draw_keys
+*   rts
+
+prev_seq_page:
+    rts
