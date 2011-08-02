@@ -108,7 +108,7 @@ push_cursor:
 
     stx $2006
     sty $2006
-    lda $2007
+    lda $2007       ; read twice due to strange hardware bug
     lda $2007
     sta cursor_old_char
     

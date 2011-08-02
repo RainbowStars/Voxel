@@ -84,7 +84,7 @@ divide8_8:
     rol x_8
     rts
 
-multiply32:
+multiply32:         ; multiply a by 32
     clc
     ldy #00
 *   cpy #5          ; 2^5=32

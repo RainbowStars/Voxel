@@ -6,14 +6,13 @@
 .alias KEY_X_MIN 2
 .alias KEY_Y_MIN [CURSOR_Y_MIN - 1]
 .alias KEY_PAGE_DEFAULT 2
+
 .alias SEQ_PAGE_DEFAULT 0
 .alias SEQ_COLS 20
 
-draw_keys:
+draw_keys:          ; draw key numbers on screen
+    `disable_ppu
     `get_vram_offset KEY_X_MIN, KEY_Y_MIN
-    pha
-    jsr disable_graphics
-    pla
     
     ldy #KEY_ROWS
 
@@ -51,7 +50,6 @@ draw_seq:
 
 get_key_num:
     ldx key_page
-    ;dex
     stx x_8
     lda #KEY_ROWS
     sta y_8
